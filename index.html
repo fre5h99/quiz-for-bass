@@ -147,8 +147,8 @@ body{
 .dot.root{background:radial-gradient(circle at 32% 28%,#ffe9c4,#f5f0e6 60%,#cfc4b4);box-shadow:0 0 10px rgba(255,255,255,.35),0 2px 5px rgba(0,0,0,.5);font-size:11px}
 .dot.good{background:radial-gradient(circle at 32% 28%,#b9ffd9,var(--good) 60%,#2fae6c);box-shadow:0 0 16px rgba(111,227,160,.6)}
 .dot.bad{background:radial-gradient(circle at 32% 28%,#ffc4c4,var(--bad) 60%,#c73e3e);box-shadow:0 0 16px rgba(255,107,107,.6)}
-.dot.ghost{background:rgba(20,14,8,.55);color:#cabfae;box-shadow:none;font-size:11.5px;border:1px solid rgba(255,255,255,.18);text-shadow:0 1px 2px rgba(0,0,0,.9)}
-.dot.ghost.nat{background:rgba(255,179,71,.30);border-color:rgba(255,179,71,.55);color:#ffe3ad}
+.dot.ghost{background:#3d352b;color:#e8e0d2;box-shadow:none;font-size:13px;border:1px solid rgba(255,255,255,.14)}
+.dot.ghost.nat{background:radial-gradient(circle at 32% 28%,#ffd58f,var(--amber) 60%,var(--amber-deep));color:#231705;border:0;box-shadow:0 2px 5px rgba(0,0,0,.4)}
 @keyframes pop{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
 @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
 .board.shake{animation:shake .3s ease}
@@ -238,7 +238,7 @@ body{
         <div class="toggle" id="tg-sound"></div>
       </div>
     </div>
-    <div class="foot">4현 베이스 표준 튜닝 (E–A–D–G) · 왼쪽이 굵은 E현</div>
+    <div class="foot">4현 베이스 표준 튜닝 · 왼쪽부터 4번줄(굵은 E) → 1번줄(G)</div>
   </section>
 
   <!-- QUIZ -->
@@ -296,13 +296,15 @@ body{
 const NOTES=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
 const SOL=['도','도#','레','레#','미','파','파#','솔','솔#','라','라#','시'];
 const NATURALS=[0,2,4,5,7,9,11];
-// 왼쪽부터 E(굵은현) A D G
+// 왼쪽부터 E(굵은현=4번줄) A D G(1번줄)
 const STRINGS=[
-  {name:'E',open:4,freq:41.20},
-  {name:'A',open:9,freq:55.00},
-  {name:'D',open:2,freq:73.42},
-  {name:'G',open:7,freq:98.00},
+  {name:'E',open:4,freq:41.20,num:4},
+  {name:'A',open:9,freq:55.00,num:3},
+  {name:'D',open:2,freq:73.42,num:2},
+  {name:'G',open:7,freq:98.00,num:1},
 ];
+const strL=s=>STRINGS[s].num+'번줄';
+const strFull=s=>`${STRINGS[s].num}번줄(${STRINGS[s].name}현)`;
 const noteAt=(s,f)=>(STRINGS[s].open+f)%12;
 const CHORDS=[
   {name:'메이저',ivs:[0,4,7],deg:{0:'루트',4:'3음',7:'5음'}},
@@ -345,13 +347,13 @@ function show(id){
 }
 
 /* ===== 지판 렌더링 ===== */
-function buildBoard(el,fretMax,onTap){
+function buildBoard(el,fretMax,onTap,labels){
   el.innerHTML='';
-  // 개방현 줄 (너트 위)
+  // 개방현 줄 (너트 위) — 퀴즈에서는 힌트 방지를 위해 줄 번호만 표시
   const open=document.createElement('div');open.className='open-row';
   for(let s=0;s<4;s++){
     const c=document.createElement('div');c.className='cell s'+s;c.dataset.s=s;c.dataset.f=0;
-    const lb=document.createElement('span');lb.className='str-label';lb.textContent=STRINGS[s].name;
+    const lb=document.createElement('span');lb.className='str-label';lb.textContent=labels==='name'?STRINGS[s].name:STRINGS[s].num;
     c.appendChild(lb);
     if(onTap)c.addEventListener('click',()=>onTap(s,0,c));
     open.appendChild(c);
@@ -438,7 +440,7 @@ function genNote(){
   putDot($('board'),s,f,'?','q');
   scrollToFret(f);
   $('q-main').innerHTML=`이 위치의 <span class="hl">${Q.mode==='solfege'?'계이름':'음이름'}</span>은?`;
-  $('q-sub').textContent=`${STRINGS[s].name}현 ${f===0?'개방현':f+'프렛'}`;
+  $('q-sub').textContent=`${strL(s)} ${f===0?'개방현':f+'프렛'}`;
   // 보기 4개
   const pool=notePool().filter(n=>n!==answer);
   const opts=shuffle([answer,...shuffle(pool).slice(0,3)]);
@@ -456,7 +458,7 @@ function revealNote(correct){
   d.textContent=NOTES[answer];
   d.classList.remove('q');
   d.classList.add(correct?'good':'bad');
-  $('q-sub').textContent=`${STRINGS[s].name}현 ${f===0?'개방현':f+'프렛'} = ${noteBoth(answer)}`;
+  $('q-sub').textContent=`${strFull(s)} ${f===0?'개방현':f+'프렛'} = ${noteBoth(answer)}`;
   playPos(s,f);
 }
 
@@ -472,12 +474,12 @@ function genFind(){
   const target=pick(inRange);
   Q.cur={s,target};
   buildBoard($('board'),cfg.fretMax,onFindTap);
-  $('q-main').innerHTML=`<span class="hl">${STRINGS[s].name}현</span>에서 <span class="hl">${noteBoth(target)}</span> 찾기`;
+  $('q-main').innerHTML=`<span class="hl">${strL(s)}</span>에서 <span class="hl">${noteBoth(target)}</span> 찾기`;
   $('q-sub').textContent='지판을 직접 탭하세요';
   $('answers').innerHTML='';
   $('answers').style.display='none';
   $('tap-hint').style.display='block';
-  $('tap-hint').innerHTML=`<b>${STRINGS[s].name}현</b> 위의 아무 위치나 탭 (개방현 포함)`;
+  $('tap-hint').innerHTML=`<b>${strL(s)}</b> 위의 아무 위치나 탭 (개방현 포함)`;
 }
 function onFindTap(s,f,cell){
   if(Q.locked)return;
@@ -487,7 +489,7 @@ function onFindTap(s,f,cell){
   putDot($('board'),s,f,NOTES[noteAt(s,f)],correct?'good':'bad');
   if(correct){
     playPos(s,f);
-    $('tap-hint').innerHTML=`⭕ 정답! ${STRINGS[s].name}현 ${f===0?'개방현':f+'프렛'} = ${noteBoth(target)}`;
+    $('tap-hint').innerHTML=`⭕ 정답! ${strFull(s)} ${f===0?'개방현':f+'프렛'} = ${noteBoth(target)}`;
   }else{
     // 정답 위치 표시
     for(let ff=0;ff<=cfg.fretMax;ff++){
@@ -609,7 +611,7 @@ function finish(){
 let studyLabel='note';
 function renderStudy(){
   const el=$('study-board');
-  buildBoard(el,12,(s,f)=>playPos(s,f));
+  buildBoard(el,12,(s,f)=>playPos(s,f),'name');
   for(let s=0;s<4;s++)for(let f=0;f<=12;f++){
     const n=noteAt(s,f);
     const nat=NATURALS.includes(n);
