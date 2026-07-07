@@ -277,7 +277,7 @@ body{
       </button>
       <button class="mode-card" data-mode="rhythm">
         <span class="mode-glyph">♩=</span>
-        <span><h3>리듬 트레이닝</h3><p>메트로놈에 맞춰 탭! 8비트·16비트·셋잇단·셔플 10가지 패턴</p></span>
+        <span><h3>리듬 트레이닝</h3><p>메트로놈에 맞춰 탭! 8비트·16비트·셋잇단 10패턴 + 🎲 랜덤 생성</p></span>
       </button>
       <button class="mode-card study" data-mode="study">
         <span class="mode-glyph">👁</span>
@@ -959,6 +959,23 @@ const RPATTERNS=[
   {cat:'셋잇단',name:'셔플',desc:'셋잇단의 1·3번째만! 블루스의 통통 튀는 그루브.',u:12,upb:3,triplet:true,hits:[0,2,3,5,6,8,9,11],bpm:70},
   {cat:'셋잇단',name:'6/8 박자',desc:'8분음표 6개가 한 마디. 1과 4에 실리는 큰 2박을 느끼며.',u:6,upb:3,sixEight:true,hits:[0,2,3,5],bpm:55},
 ];
+// 랜덤 패턴 생성: 박 단위 어휘를 조합해 음악적인 리듬 유지
+function genRandom(){
+  const kind=pick(['8','8','16','tri']);
+  let u=16,upb=4,triplet=false,bpm=85,vocab;
+  if(kind==='tri'){u=12;upb=3;triplet=true;bpm=65;vocab=[[0],[0,2],[0,1,2],[2],[]];}
+  else if(kind==='16'){bpm=70;vocab=[[0],[0,2],[0,3],[0,2,3],[2,3],[2],[0,1,2],[]];}
+  else vocab=[[0],[0,2],[2],[]];
+  const hits=[];
+  for(let b=0;b<4;b++){
+    let cell=pick(vocab);
+    if(b===0&&!cell.includes(0))cell=[0];
+    cell.forEach(c=>hits.push(b*upb+c));
+  }
+  if(hits.length<4)return genRandom();
+  const kindName=kind==='tri'?'셋잇단':kind==='16'?'16비트':'8비트';
+  return {cat:'랜덤',name:'랜덤 패턴',desc:`${kindName} 계열 랜덤 리듬 — 🎲를 눌러 새 패턴!`,u,upb,triplet,hits,bpm};
+}
 let bestR=store('bestR')||{};
 let R={pat:RPATTERNS[0],bpm:RPATTERNS[0].bpm,run:null};
 
@@ -1025,13 +1042,14 @@ function rClick(t,accent){
   g.gain.exponentialRampToValueAtTime(.0001,t+.045);
   o.connect(g);g.connect(rDest());o.start(t);o.stop(t+.06);
 }
-function rThump(t){
+function rThump(t,sustain){
+  const dur=Math.min(sustain||.28,1.4);
   const o=AC.createOscillator(),g=AC.createGain(),lp=AC.createBiquadFilter();
   o.type='triangle';o.frequency.value=55;lp.type='lowpass';lp.frequency.value=350;
   g.gain.setValueAtTime(.0001,t);
   g.gain.exponentialRampToValueAtTime(.55,t+.008);
-  g.gain.exponentialRampToValueAtTime(.0001,t+.28);
-  o.connect(lp);lp.connect(g);g.connect(rDest());o.start(t);o.stop(t+.3);
+  g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+  o.connect(lp);lp.connect(g);g.connect(rDest());o.start(t);o.stop(t+dur+.05);
 }
 function rStop(){
   if(!R.run)return;
@@ -1058,10 +1076,11 @@ function rStart(mode){
     else for(let bt=0;bt<u/upb;bt++)rClick(t0+(b*u+bt*upb)*unitSec,bt===0);
   }
   const expected=[];
-  for(let b=1;b<=BARS;b++)p.hits.forEach(h=>{
+  for(let b=1;b<=BARS;b++)p.hits.forEach((h,i)=>{
+    const durU=(i+1<p.hits.length?p.hits[i+1]:u)-h;
     const tSec=t0+(b*u+h)*unitSec;
-    if(mode==='demo')rThump(tSec);
-    expected.push({t:perf0+(b*u+h)*unitSec*1000,hit:false});
+    if(mode==='demo')rThump(tSec,durU>=upb?durU*unitSec*.85:.28);
+    expected.push({t:perf0+(b*u+h)*unitSec*1000,durMs:durU*unitSec*1000,long:durU>=upb,hit:false});
   });
   R.run={mode,bus,perf0,unitSec,u,BARS,expected,perfect:0,good:0,extra:0,combo:0,maxCombo:0,raf:0,endTimer:0};
   $('r-demo').style.display='none';$('r-go').style.display='none';$('r-stop').style.display='';
@@ -1096,13 +1115,28 @@ function rTap(){
   run.expected.forEach(e=>{if(!e.hit){const d=Math.abs(e.t-now);if(d<bd){bd=d;best=e;}}});
   if(best&&bd<=150){
     best.hit=true;
-    if(bd<=70){run.perfect++;run.combo++;rJudge('PERFECT','perfect');}
-    else{run.good++;run.combo++;rJudge('GOOD','good');}
+    const perfect=bd<=70;
+    if(perfect){run.perfect++;run.combo++;}
+    else{run.good++;run.combo++;}
+    if(best.long){run.hold={e:best,perfect};rJudge('HOLD…',perfect?'perfect':'good');}
+    else rJudge(perfect?'PERFECT':'GOOD',perfect?'perfect':'good');
     run.maxCombo=Math.max(run.maxCombo,run.combo);
     $('r-combo').textContent=run.combo>1?run.combo+' COMBO':'';
   }else{
     run.extra++;run.combo=0;rJudge('MISS','miss');
     $('r-combo').textContent='';
+  }
+}
+function rRelease(){
+  const run=R.run;
+  if(!run||!run.hold)return;
+  const h=run.hold;run.hold=null;
+  const d=performance.now()-(h.e.t+h.e.durMs);
+  if(d<-180){ // 음 길이를 못 채우고 뗌 → 한 단계 강등
+    if(h.perfect){run.perfect--;run.good++;rJudge('짧았어요… GOOD','good');}
+    else{run.good--;run.extra++;run.combo=0;$('r-combo').textContent='';rJudge('너무 짧아요 MISS','miss');}
+  }else{
+    rJudge(d>280?'조금 길었어요':'HOLD OK!',h.perfect?'perfect':'good');
   }
 }
 function rEnd(){
@@ -1142,19 +1176,31 @@ function rResetStage(){
 function bindPad(){
   const pad=$('r-pad');
   pad.addEventListener('pointerdown',e=>{e.preventDefault();rTap();});
+  pad.addEventListener('pointerup',e=>{e.preventDefault();rRelease();});
+  pad.addEventListener('pointercancel',rRelease);
+  pad.addEventListener('pointerleave',rRelease);
 }
 function rRender(){
-  const cats=[...new Set(RPATTERNS.map(p=>p.cat))];
+  const cats=[...new Set(RPATTERNS.map(p=>p.cat)),'랜덤'];
   const catBox=$('r-cats');catBox.innerHTML='';
   cats.forEach(c=>{
     const b=document.createElement('button');
-    b.className='chip'+(c===R.pat.cat?' sel':'');b.textContent=c;
+    b.className='chip'+(c===R.pat.cat?' sel':'');b.textContent=c==='랜덤'?'🎲':c;
     b.style.padding='7px 12px';b.style.fontSize='12.5px';
-    b.addEventListener('click',()=>{R.pat=RPATTERNS.find(p=>p.cat===c);R.bpm=R.pat.bpm;rStop();rResetStage();rRender();});
+    b.addEventListener('click',()=>{
+      R.pat=c==='랜덤'?genRandom():RPATTERNS.find(p=>p.cat===c);
+      R.bpm=R.pat.bpm;rStop();rResetStage();rRender();
+    });
     catBox.appendChild(b);
   });
   const patBox=$('r-pats');patBox.innerHTML='';
-  RPATTERNS.filter(p=>p.cat===R.pat.cat).forEach(p=>{
+  if(R.pat.cat==='랜덤'){
+    const b=document.createElement('button');
+    b.className='chip sel';b.textContent='🎲 새 패턴 만들기';
+    b.style.padding='7px 12px';b.style.fontSize='12.5px';
+    b.addEventListener('click',()=>{R.pat=genRandom();R.bpm=R.pat.bpm;rStop();rResetStage();rRender();});
+    patBox.appendChild(b);
+  }else RPATTERNS.filter(p=>p.cat===R.pat.cat).forEach(p=>{
     const b=document.createElement('button');
     b.className='chip'+(p===R.pat?' sel':'');
     b.textContent=p.name.replace(/^(8비트|16비트)\s/,'');
@@ -1163,7 +1209,9 @@ function rRender(){
     patBox.appendChild(b);
   });
   $('r-name').textContent=R.pat.name+(bestR[R.pat.name]?` · 최고 ${bestR[R.pat.name]}%`:'');
-  $('r-desc').textContent=R.pat.desc;
+  const u=rU(R.pat),upb=rUpb(R.pat);
+  const hasLong=R.pat.hits.some((h,i)=>((i+1<R.pat.hits.length?R.pat.hits[i+1]:u)-h)>=upb);
+  $('r-desc').textContent=R.pat.desc+(hasLong?' · 긴 음표(1박↑)는 길게 눌렀다 떼기⏺':'');
   $('bpm-val').textContent='♩ '+R.bpm;
   drawStaff(R.pat);
   const cbox=$('r-counts');cbox.innerHTML='';
