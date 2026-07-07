@@ -1,0 +1,12 @@
+{
+  "name": "BASS FRET QUIZ — 베이스 지판 퀴즈",
+  "short_name": "BassFret",
+  "description": "베이스 지판 위치 보고 음이름·계이름·코드톤 맞히기",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#171310",
+  "theme_color": "#171310",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}
