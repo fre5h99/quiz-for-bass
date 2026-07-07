@@ -1016,12 +1016,14 @@ function drawStaff(p){
 }
 // 사운드 (리듬 게임은 사운드 설정과 무관하게 재생)
 function ensureAC(){AC=AC||new (window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();}
+// 예약된 소리는 실행 중인 런의 버스로 라우팅 → 정지 시 버스를 끊으면 전부 침묵
+const rDest=()=>(R.run&&R.run.bus)||AC.destination;
 function rClick(t,accent){
   const o=AC.createOscillator(),g=AC.createGain();
   o.type='square';o.frequency.value=accent?1500:1000;
   g.gain.setValueAtTime(accent?.22:.13,t);
   g.gain.exponentialRampToValueAtTime(.0001,t+.045);
-  o.connect(g);g.connect(AC.destination);o.start(t);o.stop(t+.06);
+  o.connect(g);g.connect(rDest());o.start(t);o.stop(t+.06);
 }
 function rThump(t){
   const o=AC.createOscillator(),g=AC.createGain(),lp=AC.createBiquadFilter();
@@ -1029,12 +1031,13 @@ function rThump(t){
   g.gain.setValueAtTime(.0001,t);
   g.gain.exponentialRampToValueAtTime(.55,t+.008);
   g.gain.exponentialRampToValueAtTime(.0001,t+.28);
-  o.connect(lp);lp.connect(g);g.connect(AC.destination);o.start(t);o.stop(t+.3);
+  o.connect(lp);lp.connect(g);g.connect(rDest());o.start(t);o.stop(t+.3);
 }
 function rStop(){
   if(!R.run)return;
   cancelAnimationFrame(R.run.raf);
   clearTimeout(R.run.endTimer);
+  if(R.run.bus)try{R.run.bus.disconnect();}catch(e){}
   R.run=null;
   $('r-demo').style.display='';$('r-go').style.display='';$('r-stop').style.display='none';
   $('r-judge').textContent='';$('r-judge').className='r-judge';
@@ -1047,6 +1050,8 @@ function rStart(mode){
   const unitSec=(60/R.bpm)/upb,barSec=u*unitSec,BARS=4;
   const t0=AC.currentTime+.15;
   const perf0=performance.now()+(t0-AC.currentTime)*1000;
+  const bus=AC.createGain();bus.connect(AC.destination);
+  R.run={bus}; // 예약 전에 버스 준비 (rClick/rThump가 이 버스로 연결)
   // 클릭: 카운트인 1마디 + 본 4마디
   for(let b=0;b<=BARS;b++){
     if(p.sixEight)for(let i=0;i<6;i++)rClick(t0+(b*u+i)*unitSec,i===0||i===3);
@@ -1058,7 +1063,7 @@ function rStart(mode){
     if(mode==='demo')rThump(tSec);
     expected.push({t:perf0+(b*u+h)*unitSec*1000,hit:false});
   });
-  R.run={mode,perf0,unitSec,u,BARS,expected,perfect:0,good:0,extra:0,combo:0,maxCombo:0,raf:0,endTimer:0};
+  R.run={mode,bus,perf0,unitSec,u,BARS,expected,perfect:0,good:0,extra:0,combo:0,maxCombo:0,raf:0,endTimer:0};
   $('r-demo').style.display='none';$('r-go').style.display='none';$('r-stop').style.display='';
   $('r-combo').textContent='';
   const counts=[...document.querySelectorAll('.r-counts i')];
