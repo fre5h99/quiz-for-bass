@@ -100,7 +100,9 @@ body{
 .scorebox .sc{color:var(--good)}
 .scorebox .st{color:var(--amber)}
 
-.question{min-height:64px;display:flex;flex-direction:column;justify-content:center;text-align:center;margin:2px 0 8px}
+.question{min-height:64px;display:flex;flex-direction:column;justify-content:center;text-align:center;margin:2px 0 8px;position:relative;padding:0 46px}
+.listen-btn{position:absolute;right:0;top:50%;transform:translateY(-50%);width:42px;height:42px;border-radius:50%;border:1px solid rgba(255,179,71,.45);background:rgba(255,179,71,.10);font-size:18px;cursor:pointer}
+.listen-btn:active{transform:translateY(-50%) scale(.9)}
 .question .q-main{font-size:19px;font-weight:800;line-height:1.35}
 .question .q-main .hl{color:var(--amber)}
 .question .q-sub{font-size:12.5px;color:var(--ink-dim);margin-top:4px;min-height:17px}
@@ -209,6 +211,34 @@ body{
 .dot.d5{background:radial-gradient(circle at 32% 28%,#c2e4ff,#7ac9ff 60%,#3d8ecf);box-shadow:0 0 12px rgba(122,201,255,.45),0 2px 5px rgba(0,0,0,.5);font-size:11px}
 .dot.d7{background:radial-gradient(circle at 32% 28%,#e4d2ff,#c9a2ff 60%,#8d5fd6);box-shadow:0 0 12px rgba(201,162,255,.45),0 2px 5px rgba(0,0,0,.5);font-size:11px}
 
+/* ---------- RHYTHM ---------- */
+.r-info{background:var(--bg2);border:1px solid var(--card-edge);border-radius:12px;padding:10px 14px;margin:2px 0 8px;text-align:center}
+.r-info b{color:var(--amber);font-size:15px}
+.r-info p{font-size:12px;color:var(--ink-dim);margin-top:3px;line-height:1.5}
+.r-staff-box{background:#20180f;border:1px solid var(--card-edge);border-radius:12px;padding:8px 6px 6px}
+#r-staff{width:100%;height:92px;display:block}
+.r-counts{display:flex;margin-top:2px;padding:0 8px}
+.r-counts i{flex:1;text-align:center;font-size:9.5px;color:#6b5d49;font-style:normal;font-family:'Bungee';padding:3px 0;border-radius:4px}
+.r-counts i.beat{color:var(--ink-dim);font-size:11px}
+.r-counts i.cur{background:rgba(255,179,71,.3);color:var(--amber)}
+.r-controls{display:flex;align-items:center;gap:8px;justify-content:center;margin:10px 0 4px;flex-wrap:wrap}
+.r-bpm{display:flex;align-items:center;background:var(--bg2);border:1px solid var(--card-edge);border-radius:12px;padding:2px}
+.r-bpm button{width:36px;height:36px;border:0;background:transparent;color:var(--amber);font-size:19px;cursor:pointer;font-weight:800}
+.r-bpm span{font-family:'Bungee';font-size:13px;min-width:64px;text-align:center}
+.r-stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:170px}
+.r-judge{font-family:'Bungee';font-size:24px;min-height:32px;transition:opacity .1s}
+.r-judge.perfect{color:var(--good)}
+.r-judge.good{color:var(--amber)}
+.r-judge.miss{color:var(--bad)}
+.r-pad{width:132px;height:132px;border-radius:50%;border:2px solid rgba(255,179,71,.5);background:radial-gradient(circle at 35% 30%,#3d2e1c,#241c14);color:var(--amber);font-family:'Bungee';font-size:17px;cursor:pointer;box-shadow:0 6px 30px rgba(0,0,0,.5);transition:transform .05s;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+.r-pad:active{transform:scale(.92)}
+.r-pad:disabled{opacity:.35}
+.r-combo{font-size:12.5px;color:var(--ink-dim);min-height:18px;font-family:'Bungee'}
+.r-result-panel{background:var(--bg2);border:1px solid var(--card-edge);border-radius:var(--radius);padding:18px;text-align:center;width:100%}
+.r-result-panel h2{font-family:'Bungee';font-size:30px;color:var(--amber);margin:4px 0}
+.r-result-panel .cnts{display:flex;justify-content:center;gap:18px;margin:10px 0;font-size:13px}
+.r-result-panel .cnts b{font-family:'Bungee';display:block;font-size:19px}
+
 /* ---------- STUDY ---------- */
 .study-tools{display:flex;gap:8px;margin-bottom:12px;justify-content:center}
 .study-note{margin-top:10px;text-align:center;font-size:12px;color:var(--ink-dim);line-height:1.6}
@@ -244,6 +274,10 @@ body{
       <button class="mode-card" data-mode="chord">
         <span class="mode-glyph">R35</span>
         <span><h3>코드 톤 퀴즈</h3><p>루트 기준으로 3음·5음·7음 위치를 익힙니다 (베이스라인의 핵심)</p></span>
+      </button>
+      <button class="mode-card" data-mode="rhythm">
+        <span class="mode-glyph">♩=</span>
+        <span><h3>리듬 트레이닝</h3><p>메트로놈에 맞춰 탭! 8비트·16비트·셋잇단·셔플 10가지 패턴</p></span>
       </button>
       <button class="mode-card study" data-mode="study">
         <span class="mode-glyph">👁</span>
@@ -281,6 +315,7 @@ body{
     <div class="question">
       <div class="q-main" id="q-main"></div>
       <div class="q-sub" id="q-sub"></div>
+      <button class="listen-btn" id="btn-listen" title="문제 소리 듣기">🔊</button>
     </div>
     <div class="board-wrap"><div class="board" id="board"></div></div>
     <div class="answers" id="answers"></div>
@@ -320,6 +355,34 @@ body{
     <div class="l-nav">
       <button class="btn ghost-b" id="l-prev">← 이전</button>
       <button class="btn primary" id="l-next">다음 →</button>
+    </div>
+  </section>
+
+  <!-- RHYTHM -->
+  <section class="screen" id="scr-rhythm">
+    <div class="topbar">
+      <button class="icon-btn" id="btn-rhythm-home">←</button>
+      <div class="chip-row" id="r-cats" style="flex:1;margin:0"></div>
+      <div style="width:38px"></div>
+    </div>
+    <div class="chip-row" id="r-pats"></div>
+    <div class="r-info"><b id="r-name"></b><p id="r-desc"></p></div>
+    <div class="r-staff-box">
+      <svg id="r-staff" viewBox="0 0 340 92" preserveAspectRatio="none"></svg>
+      <div class="r-counts" id="r-counts"></div>
+    </div>
+    <div class="r-controls">
+      <div class="r-bpm">
+        <button id="bpm-dn">−</button><span id="bpm-val"></span><button id="bpm-up">＋</button>
+      </div>
+      <button class="chip play" id="r-demo">▶ 시범</button>
+      <button class="chip go" id="r-go">● 도전</button>
+      <button class="chip" id="r-stop" style="display:none">■ 정지</button>
+    </div>
+    <div class="r-stage" id="r-stage">
+      <div class="r-judge" id="r-judge"></div>
+      <button class="r-pad" id="r-pad">TAP</button>
+      <div class="r-combo" id="r-combo"></div>
     </div>
   </section>
 
@@ -373,8 +436,8 @@ let best=store('best')||{};
 
 /* ===== 사운드 ===== */
 let AC=null;
-function playFreq(freq){
-  if(!cfg.sound)return;
+function playFreq(freq,force){
+  if(!cfg.sound&&!force)return;
   try{
     AC=AC||new (window.AudioContext||window.webkitAudioContext)();
     if(AC.state==='suspended')AC.resume();
@@ -388,7 +451,7 @@ function playFreq(freq){
     o.start(t);o.stop(t+1);
   }catch(e){}
 }
-const playPos=(s,f)=>playFreq(STRINGS[s].freq*Math.pow(2,f/12));
+const playPos=(s,f,force)=>playFreq(STRINGS[s].freq*Math.pow(2,f/12),force);
 
 /* ===== 화면 전환 ===== */
 const $=id=>document.getElementById(id);
@@ -487,6 +550,7 @@ function genNote(){
   const [s,f]=randPos();
   const answer=noteAt(s,f);
   Q.cur={s,f,answer};
+  Q.listen=()=>playPos(s,f,true);
   buildBoard($('board'),cfg.fretMax,null);
   putDot($('board'),s,f,'?','q');
   scrollToFret(f);
@@ -524,6 +588,8 @@ function genFind(){
   });
   const target=pick(inRange);
   Q.cur={s,target};
+  let tf=0;for(let f=0;f<=cfg.fretMax;f++)if(noteAt(s,f)===target){tf=f;break;}
+  Q.listen=()=>playPos(s,tf,true);
   buildBoard($('board'),cfg.fretMax,onFindTap);
   $('q-main').innerHTML=`<span class="hl">${strL(s)}</span>에서 <span class="hl">${noteBoth(target)}</span> 찾기`;
   $('q-sub').textContent='지판을 직접 탭하세요';
@@ -573,6 +639,7 @@ function genChord(){
     if(!cands.length)continue;
     const [ts,tf,iv]=pick(cands);
     Q.cur={chord,root:realRoot,rs,rf,ts,tf,iv};
+    Q.listen=()=>{playPos(rs,rf,true);setTimeout(()=>playPos(ts,tf,true),480);};
     buildBoard($('board'),cfg.fretMax,null);
     putDot($('board'),rs,rf,'R','root');
     putDot($('board'),ts,tf,'?','q');
@@ -705,6 +772,22 @@ const LESSON=[
   ],
 },
 {
+  title:'숫자의 정체 — 도수',
+  body:`<p>3음·5음·7음의 숫자는 반음 개수가 아니라 <b>메이저 스케일(도레미…)의 계단 번호</b>예요. 이걸 <b>도수(degree)</b>라고 불러요.</p>
+  <p>C 메이저 스케일 <b>C·D·E·F·G·A·B</b>에 1~7번을 붙이면, "C의 3음"은 3번째 계단인 <b>E</b>, "5음"은 5번째인 <b>G</b>. 8번째는 다시 C(옥타브)예요.</p>
+  <p class="dim">프렛 1칸 = 반음, 2칸 = 온음. 2음·4음·6음도 물론 있지만 코드의 뼈대는 아니고 멜로디·워킹 라인의 양념이에요 — 지금은 <b>1·3·5·7</b>만 확실히!</p>`,
+  legend:['R','t3','t5','t7'],
+  setup(){
+    lBoard();
+    const SC=[[1,3,'1',''],[1,5,'2','ghost nat'],[2,2,'3','d3'],[2,3,'4','ghost nat'],[2,5,'5','d5'],[3,2,'6','ghost nat'],[3,4,'7','d7'],[3,5,'8','']];
+    SC.forEach(([s,f,t,c])=>putDot($('lesson-board'),s,f,t,c));
+  },
+  actions:[
+    {label:'▶ 스케일 계단 오르기',run(){playSeq([[1,3],[1,5],[2,2],[2,3],[2,5],[3,2],[3,4],[3,5]],340)}},
+    {label:'▶ 1·3·5·8만 골라 듣기',run(){playSeq([[1,3],[2,2],[2,5],[3,5]],380)}},
+  ],
+},
+{
   title:'루트 — 코드의 이름이자 기둥',
   body:`<p><b>루트(Root)</b>는 코드가 세워지는 기준음이에요. C 코드의 루트는 C, Am의 루트는 A.</p>
   <p>베이시스트가 <b>가장 많이 치는 음</b>이자, 언제 쳐도 가장 강력한 선택이에요. 특히 <b>코드가 바뀌는 첫 박에 루트</b>를 짚어주는 게 베이스의 기본 임무!</p>
@@ -741,15 +824,30 @@ const LESSON=[
   ],
 },
 {
-  title:'7음 — 세련된 한 스푼',
-  body:`<p><b>7음</b>을 더하면 코드가 네 음이 돼요. 두 종류가 있어요.</p>
-  <p><b>♭7 (10반음 위)</b> → 블루스·펑크·록의 <b>도미넌트7</b> (C7, G7…)<br><b>장7 (11반음 위)</b> → 부드럽고 재지한 <b>메이저7</b> (Cmaj7…)</p>
-  <p class="dim">부기우기 베이스라인의 그 특유의 맛이 바로 ♭7이에요. 7음은 첫 박보다는 라인 중간·끝에서 빛을 발해요.</p>`,
-  legend:['R','t3','t5','t7'],
-  setup(){lBoard();lDot(C_R,0);lDot(C_3,4);lDot(C_5,7);lDot(C_b7,10);lDot(C_7,11);},
+  title:'트라이어드 — 3도씩 두 번 쌓기',
+  body:`<p>루트 위에 3도 간격으로 두 번 쌓으면(<b>1–3–5</b>) 세 음짜리 화음, <b>트라이어드(triad)</b>가 돼요. 모든 코드의 최소 단위!</p>
+  <p>3음이 장이냐 단이냐로 <b>메이저/마이너</b>가 갈리고, 여기서 5음을 반음 내리면 <b>디미니시(dim)</b>, 반음 올리면 <b>어그먼트(aug)</b>가 돼요.</p>
+  <p class="dim">dim·aug는 지금은 "그런 게 있다"만 알면 충분해요. 네 가지 소리 차이만 귀로 느껴보세요.</p>`,
+  legend:['R','t3','t5'],
+  setup(){lBoard();lDot(C_R,0);lDot(C_3,4);lDot(C_5,7);},
   actions:[
-    {label:'▶ C7 (R·3·5·♭7)',run(){playSeq([C_R,C_3,C_5,C_b7])}},
-    {label:'▶ Cmaj7 (R·3·5·7)',run(){playSeq([C_R,C_3,C_5,C_7])}},
+    {label:'▶ 메이저 (C·E·G)',run(){playSeq([C_R,C_3,C_5]);L.timers.push(setTimeout(()=>playTogether([C_R,C_3,C_5]),1350));}},
+    {label:'▶ 마이너 (C·E♭·G)',run(){playSeq([C_R,C_b3,C_5]);L.timers.push(setTimeout(()=>playTogether([C_R,C_b3,C_5]),1350));}},
+    {label:'▶ dim (C·E♭·G♭)',run(){playSeq([C_R,C_b3,[2,4]]);L.timers.push(setTimeout(()=>playTogether([C_R,C_b3,[2,4]]),1350));}},
+    {label:'▶ aug (C·E·G♯)',run(){playSeq([C_R,C_3,[2,6]]);L.timers.push(setTimeout(()=>playTogether([C_R,C_3,[2,6]]),1350));}},
+  ],
+},
+{
+  title:'세븐스 코드 — 한 번 더 쌓기',
+  body:`<p>트라이어드 위에 3도를 <b>한 번 더</b> 쌓으면 네 음짜리 <b>세븐스 코드</b>. 어떤 7음이 얹히냐로 맛이 갈려요.</p>
+  <p><b>장7 (11반음 위)</b> → 부드럽고 재지한 <b>메이저7</b> (Cmaj7)<br><b>♭7 (10반음 위)</b> → 블루스·펑크의 <b>도미넌트7</b> (C7)<br><b>마이너 트라이어드 + ♭7</b> → 차분한 <b>마이너7</b> (Cm7)</p>
+  <p class="dim">부기우기 베이스라인 특유의 맛이 바로 ♭7! 7음은 첫 박보다 라인 중간·끝에서 빛나요.</p>`,
+  legend:['R','t3','t5','t7'],
+  setup(){lBoard();lDot(C_R,0);lDot(C_3,4);lDot(C_b3,3);lDot(C_5,7);lDot(C_b7,10);lDot(C_7,11);},
+  actions:[
+    {label:'▶ Cmaj7',run(){playSeq([C_R,C_3,C_5,C_7])}},
+    {label:'▶ C7',run(){playSeq([C_R,C_3,C_5,C_b7])}},
+    {label:'▶ Cm7',run(){playSeq([C_R,C_b3,C_5,C_b7])}},
   ],
 },
 {
@@ -773,7 +871,7 @@ const LESSON=[
     lDot(sh.R,0);lDot(sh.t3,4);lDot(sh.t5,7);lDot(sh.R8,0);
   },
   actions:[{label:'▶ 아르페지오 (위로↑ 아래로↓)',run(){
-    const c=LESSON[5].chips[L.chip]||{pos:[1,3]};
+    const c=LESSON[L.step].chips[L.chip]||{pos:[1,3]};
     const sh=shapeOf(c.pos[0],c.pos[1]);
     playSeq([sh.R,sh.t3,sh.t5,sh.R8,sh.t5,sh.t3,sh.R],360);
   }}],
@@ -787,7 +885,7 @@ const LESSON=[
   onChip(ch){renderExplorer(ch.chord);},
   setup(){renderExplorer(EXP_CHORDS[0]);},
   actions:[
-    {label:'▶ 아르페지오',run(){playExplorer(EXP_CHORDS.find(c=>c.label===LESSON[6].chips[L.chip].label)||EXP_CHORDS[0]);}},
+    {label:'▶ 아르페지오',run(){playExplorer(EXP_CHORDS.find(c=>c.label===LESSON[L.step].chips[L.chip].label)||EXP_CHORDS[0]);}},
     {label:'🎯 코드 톤 퀴즈 풀기',go:true,run(){startQuiz('chord');}},
   ],
 },
@@ -847,6 +945,236 @@ $('l-next').addEventListener('click',()=>{
 });
 $('btn-lesson-home').addEventListener('click',()=>{lStopAll();show('scr-home');});
 
+/* ===== 리듬 트레이닝 ===== */
+// u: 한 마디를 나누는 단위 수, upb: 한 박당 단위 수. hits: 치는 위치(단위 인덱스)
+const RPATTERNS=[
+  {cat:'8비트',name:'8비트 ① 록',desc:'전부 8분음표로 밀어붙이는 록의 기본. 고르고 단단하게!',hits:[0,2,4,6,8,10,12,14],bpm:85},
+  {cat:'8비트',name:'8비트 ② 기본 패턴',desc:'4분음표와 8분음표의 조합. 팝·록 어디서나 나오는 뼈대 리듬.',hits:[0,4,6,8,12,14],bpm:85},
+  {cat:'8비트',name:'8비트 ③ 로큰롤',desc:'4분음표 워킹 느낌. 한 박씩 묵직하게.',hits:[0,4,8,12],bpm:95},
+  {cat:'8비트',name:'8비트 ④ 보사노바',desc:'점4분+8분의 라틴 그루브. 박 사이를 파고드는 당김음이 포인트.',hits:[0,6,8,14],bpm:75},
+  {cat:'16비트',name:'16비트 ① 기본 패턴',desc:'16분음표 등장! "원-앤-아, 쓰리-앤-아"로 세면서.',hits:[0,2,3,8,10,11],bpm:70},
+  {cat:'16비트',name:'16비트 ② 점8분+16분',desc:'"따-안따" 갤럽 리듬. 말이 달리는 느낌.',hits:[0,3,4,7,8,11,12,15],bpm:65},
+  {cat:'16비트',name:'16비트 ③ 핑거 펑크',desc:'당김음 가득한 펑키 라인. 쉼표를 "느끼는" 게 핵심!',hits:[0,3,6,10,12,14],bpm:75},
+  {cat:'셋잇단',name:'셋잇단 기본',desc:'한 박을 3등분. "1-트-플 2-트-플" 고르게 굴리기.',u:12,upb:3,triplet:true,hits:[0,1,2,3,4,5,6,7,8,9,10,11],bpm:60},
+  {cat:'셋잇단',name:'셔플',desc:'셋잇단의 1·3번째만! 블루스의 통통 튀는 그루브.',u:12,upb:3,triplet:true,hits:[0,2,3,5,6,8,9,11],bpm:70},
+  {cat:'셋잇단',name:'6/8 박자',desc:'8분음표 6개가 한 마디. 1과 4에 실리는 큰 2박을 느끼며.',u:6,upb:3,sixEight:true,hits:[0,2,3,5],bpm:55},
+];
+let bestR=store('bestR')||{};
+let R={pat:RPATTERNS[0],bpm:RPATTERNS[0].bpm,run:null};
+
+function rU(p){return p.u||16}
+function rUpb(p){return p.upb||4}
+function rCountLabels(p){
+  const u=rU(p),upb=rUpb(p),out=[];
+  if(p.sixEight){for(let i=0;i<6;i++)out.push([String(i+1),i===0||i===3]);return out;}
+  for(let b=0;b<u/upb;b++){
+    if(upb===4)out.push([String(b+1),true],['e',false],['&',false],['a',false]);
+    else out.push([String(b+1),true],['트',false],['플',false]);
+  }
+  return out;
+}
+// 간이 리듬 악보 (슬래시 노테이션)
+function drawStaff(p){
+  const u=rU(p),upb=rUpb(p),W=340,padX=16,slotW=(W-padX*2)/u;
+  const X=i=>padX+slotW*i+slotW*.35;
+  const BASE=62,STEM=24,parts=[];
+  parts.push(`<line x1="6" y1="${BASE}" x2="${W-6}" y2="${BASE}" stroke="#4a3c28" stroke-width="1.5"/>`);
+  parts.push(`<line x1="8" y1="30" x2="8" y2="${BASE+8}" stroke="#7a6c58" stroke-width="2.5"/>`);
+  parts.push(`<line x1="${W-8}" y1="30" x2="${W-8}" y2="${BASE+8}" stroke="#7a6c58" stroke-width="2.5"/>`);
+  for(let b=1;b<u/upb;b++)parts.push(`<line x1="${padX+slotW*b*upb}" y1="${BASE-5}" x2="${padX+slotW*b*upb}" y2="${BASE+5}" stroke="#3a2f20" stroke-width="1"/>`);
+  const hits=p.hits;
+  const durOf=i=>((i+1<hits.length?hits[i+1]:u)-hits[i]);
+  // 박 단위 그룹
+  const groups={};
+  hits.forEach((h,i)=>{const g=Math.floor(h/upb);(groups[g]=groups[g]||[]).push(i);});
+  hits.forEach((h,i)=>{
+    const x=X(h),dur=durOf(i);
+    parts.push(`<g transform="rotate(-18 ${x} ${BASE})"><rect x="${x-6}" y="${BASE-3.5}" width="13" height="7" rx="2.5" fill="#f3e9dc"/></g>`);
+    parts.push(`<line x1="${x+6}" y1="${BASE-2}" x2="${x+6}" y2="${BASE-STEM-14}" stroke="#f3e9dc" stroke-width="1.8"/>`);
+    if(dur===3||dur===6||dur===12)parts.push(`<circle cx="${x+13}" cy="${BASE+1}" r="2.2" fill="#f3e9dc"/>`);
+    const g=groups[Math.floor(h/upb)];
+    if(g.length===1&&(dur<=2||dur===3)&&upb===4)
+      parts.push(`<path d="M ${x+6} ${BASE-STEM-14} q 9 4 7 14" stroke="#f3e9dc" stroke-width="1.8" fill="none"/>`);
+  });
+  const beamY=BASE-STEM-14;
+  Object.values(groups).forEach(g=>{
+    if(g.length<2)return;
+    const x1=X(hits[g[0]])+6,x2=X(hits[g[g.length-1]])+6;
+    parts.push(`<rect x="${x1}" y="${beamY}" width="${x2-x1}" height="3.6" fill="#f3e9dc"/>`);
+    for(let k=0;k<g.length-1;k++){
+      const gap=hits[g[k+1]]-hits[g[k]];
+      const xa=X(hits[g[k]])+6,xb=X(hits[g[k+1]])+6;
+      if(gap===1&&upb===4)parts.push(`<rect x="${xa}" y="${beamY+6}" width="${xb-xa}" height="3.6" fill="#f3e9dc"/>`);
+      if(gap===3&&upb===4)parts.push(`<rect x="${xb-8}" y="${beamY+6}" width="8" height="3.6" fill="#f3e9dc"/>`);
+    }
+    if(p.triplet){
+      parts.push(`<text x="${(x1+x2)/2}" y="${beamY-5}" font-size="10" fill="#a89a87" text-anchor="middle" font-style="italic">3</text>`);
+    }
+  });
+  parts.push(`<line id="r-ph" x1="-10" y1="14" x2="-10" y2="${BASE+12}" stroke="#ffb347" stroke-width="2" opacity=".85"/>`);
+  $('r-staff').innerHTML=parts.join('');
+}
+// 사운드 (리듬 게임은 사운드 설정과 무관하게 재생)
+function ensureAC(){AC=AC||new (window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();}
+function rClick(t,accent){
+  const o=AC.createOscillator(),g=AC.createGain();
+  o.type='square';o.frequency.value=accent?1500:1000;
+  g.gain.setValueAtTime(accent?.22:.13,t);
+  g.gain.exponentialRampToValueAtTime(.0001,t+.045);
+  o.connect(g);g.connect(AC.destination);o.start(t);o.stop(t+.06);
+}
+function rThump(t){
+  const o=AC.createOscillator(),g=AC.createGain(),lp=AC.createBiquadFilter();
+  o.type='triangle';o.frequency.value=55;lp.type='lowpass';lp.frequency.value=350;
+  g.gain.setValueAtTime(.0001,t);
+  g.gain.exponentialRampToValueAtTime(.55,t+.008);
+  g.gain.exponentialRampToValueAtTime(.0001,t+.28);
+  o.connect(lp);lp.connect(g);g.connect(AC.destination);o.start(t);o.stop(t+.3);
+}
+function rStop(){
+  if(!R.run)return;
+  cancelAnimationFrame(R.run.raf);
+  clearTimeout(R.run.endTimer);
+  R.run=null;
+  $('r-demo').style.display='';$('r-go').style.display='';$('r-stop').style.display='none';
+  $('r-judge').textContent='';$('r-judge').className='r-judge';
+  document.querySelectorAll('.r-counts i').forEach(c=>c.classList.remove('cur'));
+  const ph=$('r-ph');if(ph)ph.setAttribute('x1',-10),ph.setAttribute('x2',-10);
+}
+function rStart(mode){
+  rStop();ensureAC();
+  const p=R.pat,u=rU(p),upb=rUpb(p);
+  const unitSec=(60/R.bpm)/upb,barSec=u*unitSec,BARS=4;
+  const t0=AC.currentTime+.15;
+  const perf0=performance.now()+(t0-AC.currentTime)*1000;
+  // 클릭: 카운트인 1마디 + 본 4마디
+  for(let b=0;b<=BARS;b++){
+    if(p.sixEight)for(let i=0;i<6;i++)rClick(t0+(b*u+i)*unitSec,i===0||i===3);
+    else for(let bt=0;bt<u/upb;bt++)rClick(t0+(b*u+bt*upb)*unitSec,bt===0);
+  }
+  const expected=[];
+  for(let b=1;b<=BARS;b++)p.hits.forEach(h=>{
+    const tSec=t0+(b*u+h)*unitSec;
+    if(mode==='demo')rThump(tSec);
+    expected.push({t:perf0+(b*u+h)*unitSec*1000,hit:false});
+  });
+  R.run={mode,perf0,unitSec,u,BARS,expected,perfect:0,good:0,extra:0,combo:0,maxCombo:0,raf:0,endTimer:0};
+  $('r-demo').style.display='none';$('r-go').style.display='none';$('r-stop').style.display='';
+  $('r-combo').textContent='';
+  const counts=[...document.querySelectorAll('.r-counts i')];
+  const ph=$('r-ph'),padX=16,slotW=(340-32)/u;
+  const loop=()=>{
+    if(!R.run)return;
+    const el=(performance.now()-perf0)/1000;
+    const unitF=el/unitSec;
+    if(unitF<0){R.run.raf=requestAnimationFrame(loop);return;}
+    const inBar=unitF%u;
+    counts.forEach((c,i)=>c.classList.toggle('cur',i===Math.floor(inBar)));
+    if(unitF<u){ $('r-judge').textContent='카운트인… '+(Math.floor(unitF/upb)+1);$('r-judge').className='r-judge'; }
+    else if(R.run.mode==='play'&&$('r-judge').textContent.startsWith('카운트인')){$('r-judge').textContent='GO!';}
+    const x=padX+slotW*inBar+slotW*.35;
+    ph.setAttribute('x1',x);ph.setAttribute('x2',x);
+    R.run.raf=requestAnimationFrame(loop);
+  };
+  R.run.raf=requestAnimationFrame(loop);
+  R.run.endTimer=setTimeout(()=>rEnd(),( (BARS+1)*barSec )*1000+350);
+}
+function rJudge(txt,cls){
+  const j=$('r-judge');j.textContent=txt;j.className='r-judge '+cls;
+}
+function rTap(){
+  ensureAC();rThump(AC.currentTime);
+  const run=R.run;
+  if(!run||run.mode!=='play')return;
+  const now=performance.now();
+  let best=null,bd=1e9;
+  run.expected.forEach(e=>{if(!e.hit){const d=Math.abs(e.t-now);if(d<bd){bd=d;best=e;}}});
+  if(best&&bd<=150){
+    best.hit=true;
+    if(bd<=70){run.perfect++;run.combo++;rJudge('PERFECT','perfect');}
+    else{run.good++;run.combo++;rJudge('GOOD','good');}
+    run.maxCombo=Math.max(run.maxCombo,run.combo);
+    $('r-combo').textContent=run.combo>1?run.combo+' COMBO':'';
+  }else{
+    run.extra++;run.combo=0;rJudge('MISS','miss');
+    $('r-combo').textContent='';
+  }
+}
+function rEnd(){
+  const run=R.run;
+  if(!run)return;
+  const isPlay=run.mode==='play';
+  rStop();
+  if(!isPlay){rJudge('이번엔 직접! ● 도전','');return;}
+  const total=run.expected.length;
+  const missed=run.expected.filter(e=>!e.hit).length+run.extra;
+  const acc=Math.round((run.perfect*2+run.good)/(total*2)*100);
+  const prev=bestR[R.pat.name]||0;
+  if(acc>prev){bestR[R.pat.name]=acc;store('bestR',bestR);}
+  $('r-stage').innerHTML=`<div class="r-result-panel">
+    <div style="font-size:34px">${acc>=95?'🏆':acc>=80?'🎸':acc>=60?'💪':'🌱'}</div>
+    <h2>${acc}%</h2>
+    <div class="cnts">
+      <span><b style="color:var(--good)">${run.perfect}</b>퍼펙트</span>
+      <span><b style="color:var(--amber)">${run.good}</b>굿</span>
+      <span><b style="color:var(--bad)">${missed}</b>미스</span>
+      <span><b>${run.maxCombo}</b>최대콤보</span>
+    </div>
+    <div style="font-size:12px;color:var(--ink-dim)">${acc>prev?'🎉 신기록!':'최고기록 '+Math.max(prev,acc)+'%'}</div>
+    <div class="chip-row" style="margin-top:12px">
+      <button class="chip go" id="r-again">한 번 더</button>
+      <button class="chip" id="r-close">패턴 선택</button>
+    </div></div>`;
+  $('r-again').addEventListener('click',()=>{rResetStage();rStart('play');});
+  $('r-close').addEventListener('click',rResetStage);
+}
+function rResetStage(){
+  $('r-stage').innerHTML=`<div class="r-judge" id="r-judge"></div>
+    <button class="r-pad" id="r-pad">TAP</button>
+    <div class="r-combo" id="r-combo"></div>`;
+  bindPad();
+}
+function bindPad(){
+  const pad=$('r-pad');
+  pad.addEventListener('pointerdown',e=>{e.preventDefault();rTap();});
+}
+function rRender(){
+  const cats=[...new Set(RPATTERNS.map(p=>p.cat))];
+  const catBox=$('r-cats');catBox.innerHTML='';
+  cats.forEach(c=>{
+    const b=document.createElement('button');
+    b.className='chip'+(c===R.pat.cat?' sel':'');b.textContent=c;
+    b.style.padding='7px 12px';b.style.fontSize='12.5px';
+    b.addEventListener('click',()=>{R.pat=RPATTERNS.find(p=>p.cat===c);R.bpm=R.pat.bpm;rStop();rResetStage();rRender();});
+    catBox.appendChild(b);
+  });
+  const patBox=$('r-pats');patBox.innerHTML='';
+  RPATTERNS.filter(p=>p.cat===R.pat.cat).forEach(p=>{
+    const b=document.createElement('button');
+    b.className='chip'+(p===R.pat?' sel':'');
+    b.textContent=p.name.replace(/^(8비트|16비트)\s/,'');
+    b.style.padding='7px 12px';b.style.fontSize='12.5px';
+    b.addEventListener('click',()=>{R.pat=p;R.bpm=p.bpm;rStop();rResetStage();rRender();});
+    patBox.appendChild(b);
+  });
+  $('r-name').textContent=R.pat.name+(bestR[R.pat.name]?` · 최고 ${bestR[R.pat.name]}%`:'');
+  $('r-desc').textContent=R.pat.desc;
+  $('bpm-val').textContent='♩ '+R.bpm;
+  drawStaff(R.pat);
+  const cbox=$('r-counts');cbox.innerHTML='';
+  rCountLabels(R.pat).forEach(([t,beat])=>{
+    const i=document.createElement('i');i.textContent=t;if(beat)i.classList.add('beat');
+    cbox.appendChild(i);
+  });
+}
+$('bpm-dn').addEventListener('click',()=>{R.bpm=Math.max(40,R.bpm-5);$('bpm-val').textContent='♩ '+R.bpm;});
+$('bpm-up').addEventListener('click',()=>{R.bpm=Math.min(180,R.bpm+5);$('bpm-val').textContent='♩ '+R.bpm;});
+$('r-demo').addEventListener('click',()=>rStart('demo'));
+$('r-go').addEventListener('click',()=>{rResetStage();rStart('play');});
+$('r-stop').addEventListener('click',rStop);
+$('btn-rhythm-home').addEventListener('click',()=>{rStop();show('scr-home');});
+bindPad();
+
 /* ===== 학습 모드 ===== */
 let studyLabel='note';
 function renderStudy(){
@@ -877,6 +1205,7 @@ document.querySelectorAll('.mode-card').forEach(c=>c.addEventListener('click',()
   const m=c.dataset.mode;
   if(m==='study'){renderStudy();show('scr-study');}
   else if(m==='lesson'){L.step=0;renderLesson();show('scr-lesson');}
+  else if(m==='rhythm'){rResetStage();rRender();show('scr-rhythm');}
   else startQuiz(m);
 }));
 document.querySelectorAll('#seg-fret button').forEach(b=>b.addEventListener('click',()=>{
@@ -890,6 +1219,7 @@ document.querySelectorAll('#seg-label button').forEach(b=>b.addEventListener('cl
   renderStudy();
 }));
 document.querySelector('#seg-label button[data-v="note"]').classList.add('sel');
+$('btn-listen').addEventListener('click',()=>{if(Q.listen)Q.listen();});
 $('btn-home').addEventListener('click',()=>{if(Q.timer)clearTimeout(Q.timer);show('scr-home');});
 $('btn-study-home').addEventListener('click',()=>show('scr-home'));
 $('btn-result-home').addEventListener('click',()=>show('scr-home'));

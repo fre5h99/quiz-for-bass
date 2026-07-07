@@ -1,4 +1,4 @@
-const CACHE = 'bassfret-v3';
+const CACHE = 'bassfret-v4';
 const ASSETS = ['.', 'index.html', 'manifest.json', 'icon.svg'];
 
 self.addEventListener('install', e => {
