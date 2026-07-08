@@ -378,6 +378,7 @@ body{
       <button class="chip play" id="r-demo">▶ 시범</button>
       <button class="chip go" id="r-go">● 도전</button>
       <button class="chip" id="r-stop" style="display:none">■ 정지</button>
+      <button class="chip" id="r-cal" style="font-size:11.5px">🎧 지연 보정</button>
     </div>
     <div class="r-stage" id="r-stage">
       <div class="r-judge" id="r-judge"></div>
@@ -983,6 +984,7 @@ function genSubdiv(){
     u:16,upb:4,subdiv:true,nums,hits:nums.map((n,b)=>b*4+n-1),bpm:60};
 }
 let bestR=store('bestR')||{};
+let calMs=store('cal')||0; // 이어폰 지연 보정값 (탭 판정에서 차감)
 let R={pat:RPATTERNS[0],bpm:RPATTERNS[0].bpm,run:null};
 
 function rU(p){return p.u||16}
@@ -1142,13 +1144,50 @@ function rStart(mode){
   R.run.endTimer=setTimeout(()=>rEnd(),( (BARS+1)*barSec )*1000+350);
 }
 function rJudge(txt,cls){
-  const j=$('r-judge');j.textContent=txt;j.className='r-judge '+cls;
+  const j=$('r-judge');if(j){j.textContent=txt;j.className='r-judge '+cls;}
+}
+/* 이어폰 지연 보정: 클릭 12회(카운트 4 + 측정 8), 탭 오차의 중앙값을 저장 */
+function rCalibrate(){
+  rStop();ensureAC();
+  const spb=60/90,t0=AC.currentTime+.2;
+  const perf0=performance.now()+(t0-AC.currentTime)*1000;
+  const bus=AC.createGain();bus.connect(AC.destination);
+  R.run={mode:'cal',bus,taps:[],targets:[],raf:0,endTimer:0};
+  for(let i=0;i<12;i++)rClick(t0+i*spb,i%4===0);
+  for(let i=4;i<12;i++)R.run.targets.push(perf0+i*spb*1000);
+  $('r-demo').style.display='none';$('r-go').style.display='none';$('r-stop').style.display='';
+  rJudge('클릭에 맞춰 탭! (준비 4번 → 측정 8번)','');
+  R.run.endTimer=setTimeout(()=>{
+    const taps=R.run?R.run.taps:[];
+    rStop();
+    if(taps.length>=4){
+      taps.sort((a,b)=>a-b);
+      calMs=Math.round(taps[Math.floor(taps.length/2)]);
+      store('cal',calMs);
+      rCalLabel();
+      rJudge(`보정 완료 ${calMs>0?'+':''}${calMs}ms`,'perfect');
+    }else rJudge('탭이 부족해요 — 다시 시도','miss');
+  },12*spb*1000+500);
+}
+function rCalLabel(){
+  const b=$('r-cal');if(b)b.textContent=calMs?`🎧 보정 ${calMs>0?'+':''}${calMs}ms`:'🎧 지연 보정';
 }
 function rTap(){
   ensureAC();rThump(AC.currentTime);
   const run=R.run;
-  if(!run||run.mode!=='play')return;
-  const now=performance.now();
+  if(!run)return;
+  if(run.mode==='cal'){ // 보정 모드: 탭-클릭 오차 수집
+    const raw=performance.now();
+    let bt=null,bd=1e9;
+    run.targets.forEach(t=>{const d=raw-t;if(Math.abs(d)<Math.abs(bd)){bd=d;bt=t;}});
+    if(bt!==null&&Math.abs(bd)<=450){
+      run.taps.push(bd);
+      rJudge(`${run.taps.length} / 8`,'good');
+    }
+    return;
+  }
+  if(run.mode!=='play')return;
+  const now=performance.now()-calMs;
   let best=null,bd=1e9;
   run.expected.forEach(e=>{if(!e.hit){const d=Math.abs(e.t-now);if(d<bd){bd=d;best=e;}}});
   if(best&&bd<=150){
@@ -1169,7 +1208,7 @@ function rRelease(){
   const run=R.run;
   if(!run||!run.hold)return;
   const h=run.hold;run.hold=null;
-  const d=performance.now()-(h.e.t+h.e.durMs);
+  const d=performance.now()-calMs-(h.e.t+h.e.durMs);
   if(d<-180){ // 음 길이를 못 채우고 뗌 → 한 단계 강등
     if(h.perfect){run.perfect--;run.good++;rJudge('짧았어요… GOOD','good');}
     else{run.good--;run.extra++;run.combo=0;$('r-combo').textContent='';rJudge('너무 짧아요 MISS','miss');}
@@ -1265,6 +1304,8 @@ $('bpm-up').addEventListener('click',()=>{R.bpm=Math.min(180,R.bpm+5);$('bpm-val
 $('r-demo').addEventListener('click',()=>rStart('demo'));
 $('r-go').addEventListener('click',()=>{rResetStage();rStart('play');});
 $('r-stop').addEventListener('click',rStop);
+$('r-cal').addEventListener('click',rCalibrate);
+rCalLabel();
 $('btn-rhythm-home').addEventListener('click',()=>{rStop();show('scr-home');});
 bindPad();
 
