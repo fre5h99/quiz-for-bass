@@ -1061,13 +1061,23 @@ function rClick(t,accent){
   o.connect(g);g.connect(rDest());o.start(t);o.stop(t+.06);
 }
 function rThump(t,sustain){
-  const dur=Math.min(sustain||.28,1.4);
+  // 폰 스피커는 200Hz 이하를 거의 못 내므로 배음 풍부한 톤 + 어택으로 설계
+  const dur=Math.min(sustain||.28,1.4),dest=rDest();
   const o=AC.createOscillator(),g=AC.createGain(),lp=AC.createBiquadFilter();
-  o.type='triangle';o.frequency.value=55;lp.type='lowpass';lp.frequency.value=350;
+  o.type='sawtooth';o.frequency.setValueAtTime(110,t);
+  lp.type='lowpass';lp.frequency.setValueAtTime(1600,t);
+  lp.frequency.exponentialRampToValueAtTime(300,t+Math.min(dur,.35));
   g.gain.setValueAtTime(.0001,t);
-  g.gain.exponentialRampToValueAtTime(.55,t+.008);
+  g.gain.exponentialRampToValueAtTime(.5,t+.006);
   g.gain.exponentialRampToValueAtTime(.0001,t+dur);
-  o.connect(lp);lp.connect(g);g.connect(rDest());o.start(t);o.stop(t+dur+.05);
+  o.connect(lp);lp.connect(g);g.connect(dest);o.start(t);o.stop(t+dur+.05);
+  // 어택 트랜지언트 (손끝 튕김 느낌)
+  const o2=AC.createOscillator(),g2=AC.createGain();
+  o2.type='triangle';o2.frequency.setValueAtTime(880,t);
+  o2.frequency.exponentialRampToValueAtTime(220,t+.03);
+  g2.gain.setValueAtTime(.18,t);
+  g2.gain.exponentialRampToValueAtTime(.0001,t+.05);
+  o2.connect(g2);g2.connect(dest);o2.start(t);o2.stop(t+.06);
 }
 function rStop(){
   if(!R.run)return;
