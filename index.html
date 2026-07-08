@@ -976,6 +976,12 @@ function genRandom(){
   const kindName=kind==='tri'?'셋잇단':kind==='16'?'16비트':'8비트';
   return {cat:'랜덤',name:'랜덤 패턴',desc:`${kindName} 계열 랜덤 리듬 — 🎲를 눌러 새 패턴!`,u,upb,triplet,hits,bpm};
 }
+// 쪼개기 훈련: 각 박을 4등분(1·e·&·a), 박마다 칠 위치를 숫자로만 제시
+function genSubdiv(){
+  const nums=[1,2,3,4].map(()=>rand(4)+1);
+  return {cat:'쪼개기',name:'쪼개기 훈련',desc:'숫자 = 그 박을 4등분했을 때 칠 위치 (1=박머리, 2=e, 3=&, 4=a). 클릭을 들으며 머릿속으로 쪼개서 탭!',
+    u:16,upb:4,subdiv:true,nums,hits:nums.map((n,b)=>b*4+n-1),bpm:60};
+}
 let bestR=store('bestR')||{};
 let R={pat:RPATTERNS[0],bpm:RPATTERNS[0].bpm,run:null};
 
@@ -993,6 +999,18 @@ function rCountLabels(p){
 // 간이 리듬 악보 (슬래시 노테이션)
 function drawStaff(p){
   const u=rU(p),upb=rUpb(p),W=340,padX=16,slotW=(W-padX*2)/u;
+  if(p.subdiv){ // 악보 대신 큰 숫자만 제시
+    const parts=[];
+    for(let b=0;b<4;b++){
+      const xc=padX+(W-padX*2)*(b*upb+upb/2)/u;
+      parts.push(`<line x1="${padX+slotW*b*upb}" y1="26" x2="${padX+slotW*b*upb}" y2="78" stroke="#3a2f20" stroke-width="1.5"/>`);
+      parts.push(`<text class="r-num" x="${xc}" y="66" font-size="40" fill="#f3e9dc" text-anchor="middle" font-family="Bungee">${p.nums[b]}</text>`);
+    }
+    parts.push(`<line x1="${W-padX}" y1="26" x2="${W-padX}" y2="78" stroke="#3a2f20" stroke-width="1.5"/>`);
+    parts.push(`<line id="r-ph" x1="-10" y1="14" x2="-10" y2="86" stroke="#ffb347" stroke-width="2" opacity=".85"/>`);
+    $('r-staff').innerHTML=parts.join('');
+    return;
+  }
   const X=i=>padX+slotW*i+slotW*.35;
   const BASE=62,STEM=24,parts=[];
   parts.push(`<line x1="6" y1="${BASE}" x2="${W-6}" y2="${BASE}" stroke="#4a3c28" stroke-width="1.5"/>`);
@@ -1060,6 +1078,7 @@ function rStop(){
   $('r-demo').style.display='';$('r-go').style.display='';$('r-stop').style.display='none';
   $('r-judge').textContent='';$('r-judge').className='r-judge';
   document.querySelectorAll('.r-counts i').forEach(c=>c.classList.remove('cur'));
+  document.querySelectorAll('#r-staff .r-num').forEach(n=>n.setAttribute('fill','#f3e9dc'));
   const ph=$('r-ph');if(ph)ph.setAttribute('x1',-10),ph.setAttribute('x2',-10);
 }
 function rStart(mode){
@@ -1078,14 +1097,16 @@ function rStart(mode){
   const expected=[];
   for(let b=1;b<=BARS;b++)p.hits.forEach((h,i)=>{
     const durU=(i+1<p.hits.length?p.hits[i+1]:u)-h;
+    const isLong=durU>=upb&&!p.subdiv; // 쪼개기 훈련은 순수 탭 (홀드 없음)
     const tSec=t0+(b*u+h)*unitSec;
-    if(mode==='demo')rThump(tSec,durU>=upb?durU*unitSec*.85:.28);
-    expected.push({t:perf0+(b*u+h)*unitSec*1000,durMs:durU*unitSec*1000,long:durU>=upb,hit:false});
+    if(mode==='demo')rThump(tSec,isLong?durU*unitSec*.85:.28);
+    expected.push({t:perf0+(b*u+h)*unitSec*1000,durMs:durU*unitSec*1000,long:isLong,hit:false});
   });
   R.run={mode,bus,perf0,unitSec,u,BARS,expected,perfect:0,good:0,extra:0,combo:0,maxCombo:0,raf:0,endTimer:0};
   $('r-demo').style.display='none';$('r-go').style.display='none';$('r-stop').style.display='';
   $('r-combo').textContent='';
   const counts=[...document.querySelectorAll('.r-counts i')];
+  const numEls=[...document.querySelectorAll('#r-staff .r-num')];
   const ph=$('r-ph'),padX=16,slotW=(340-32)/u;
   const loop=()=>{
     if(!R.run)return;
@@ -1094,6 +1115,7 @@ function rStart(mode){
     if(unitF<0){R.run.raf=requestAnimationFrame(loop);return;}
     const inBar=unitF%u;
     counts.forEach((c,i)=>c.classList.toggle('cur',i===Math.floor(inBar)));
+    numEls.forEach((n,i)=>n.setAttribute('fill',i===Math.floor(inBar/upb)?'#ffb347':'#f3e9dc'));
     if(unitF<u){ $('r-judge').textContent='카운트인… '+(Math.floor(unitF/upb)+1);$('r-judge').className='r-judge'; }
     else if(R.run.mode==='play'&&$('r-judge').textContent.startsWith('카운트인')){$('r-judge').textContent='GO!';}
     const x=padX+slotW*inBar+slotW*.35;
@@ -1181,24 +1203,25 @@ function bindPad(){
   pad.addEventListener('pointerleave',rRelease);
 }
 function rRender(){
-  const cats=[...new Set(RPATTERNS.map(p=>p.cat)),'랜덤'];
+  const cats=[...new Set(RPATTERNS.map(p=>p.cat)),'랜덤','쪼개기'];
+  const GEN={'랜덤':genRandom,'쪼개기':genSubdiv};
   const catBox=$('r-cats');catBox.innerHTML='';
   cats.forEach(c=>{
     const b=document.createElement('button');
     b.className='chip'+(c===R.pat.cat?' sel':'');b.textContent=c==='랜덤'?'🎲':c;
     b.style.padding='7px 12px';b.style.fontSize='12.5px';
     b.addEventListener('click',()=>{
-      R.pat=c==='랜덤'?genRandom():RPATTERNS.find(p=>p.cat===c);
+      R.pat=GEN[c]?GEN[c]():RPATTERNS.find(p=>p.cat===c);
       R.bpm=R.pat.bpm;rStop();rResetStage();rRender();
     });
     catBox.appendChild(b);
   });
   const patBox=$('r-pats');patBox.innerHTML='';
-  if(R.pat.cat==='랜덤'){
+  if(GEN[R.pat.cat]){
     const b=document.createElement('button');
-    b.className='chip sel';b.textContent='🎲 새 패턴 만들기';
+    b.className='chip sel';b.textContent=R.pat.cat==='쪼개기'?'🔢 새 문제':'🎲 새 패턴 만들기';
     b.style.padding='7px 12px';b.style.fontSize='12.5px';
-    b.addEventListener('click',()=>{R.pat=genRandom();R.bpm=R.pat.bpm;rStop();rResetStage();rRender();});
+    b.addEventListener('click',()=>{R.pat=GEN[R.pat.cat]();R.bpm=R.pat.bpm;rStop();rResetStage();rRender();});
     patBox.appendChild(b);
   }else RPATTERNS.filter(p=>p.cat===R.pat.cat).forEach(p=>{
     const b=document.createElement('button');
@@ -1210,7 +1233,7 @@ function rRender(){
   });
   $('r-name').textContent=R.pat.name+(bestR[R.pat.name]?` · 최고 ${bestR[R.pat.name]}%`:'');
   const u=rU(R.pat),upb=rUpb(R.pat);
-  const hasLong=R.pat.hits.some((h,i)=>((i+1<R.pat.hits.length?R.pat.hits[i+1]:u)-h)>=upb);
+  const hasLong=!R.pat.subdiv&&R.pat.hits.some((h,i)=>((i+1<R.pat.hits.length?R.pat.hits[i+1]:u)-h)>=upb);
   $('r-desc').textContent=R.pat.desc+(hasLong?' · 긴 음표(1박↑)는 길게 눌렀다 떼기⏺':'');
   $('bpm-val').textContent='♩ '+R.bpm;
   drawStaff(R.pat);
