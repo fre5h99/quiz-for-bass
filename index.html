@@ -1061,23 +1061,30 @@ function rClick(t,accent){
   o.connect(g);g.connect(rDest());o.start(t);o.stop(t+.06);
 }
 function rThump(t,sustain){
-  // 폰 스피커는 200Hz 이하를 거의 못 내므로 배음 풍부한 톤 + 어택으로 설계
-  const dur=Math.min(sustain||.28,1.4),dest=rDest();
-  const o=AC.createOscillator(),g=AC.createGain(),lp=AC.createBiquadFilter();
-  o.type='sawtooth';o.frequency.setValueAtTime(110,t);
-  lp.type='lowpass';lp.frequency.setValueAtTime(1600,t);
-  lp.frequency.exponentialRampToValueAtTime(300,t+Math.min(dur,.35));
+  // 따뜻한 베이스 플럭: 삼각파 110Hz(부드러운 배음) + 사인 55Hz(몸통)
+  // 저음은 지각 음량이 작아 이어폰에서 묻히므로 게인을 크게, 톤은 부드럽게
+  const dur=Math.min(sustain||.3,1.4),dest=rDest();
+  const lp=AC.createBiquadFilter();lp.type='lowpass';
+  lp.frequency.setValueAtTime(850,t);
+  lp.frequency.exponentialRampToValueAtTime(230,t+Math.min(dur,.4));
+  const g=AC.createGain();
   g.gain.setValueAtTime(.0001,t);
-  g.gain.exponentialRampToValueAtTime(.5,t+.006);
+  g.gain.exponentialRampToValueAtTime(.8,t+.01);
   g.gain.exponentialRampToValueAtTime(.0001,t+dur);
-  o.connect(lp);lp.connect(g);g.connect(dest);o.start(t);o.stop(t+dur+.05);
-  // 어택 트랜지언트 (손끝 튕김 느낌)
+  lp.connect(g);g.connect(dest);
+  const o1=AC.createOscillator();
+  o1.type='triangle';o1.frequency.setValueAtTime(110,t);
+  o1.connect(lp);o1.start(t);o1.stop(t+dur+.05);
   const o2=AC.createOscillator(),g2=AC.createGain();
-  o2.type='triangle';o2.frequency.setValueAtTime(880,t);
-  o2.frequency.exponentialRampToValueAtTime(220,t+.03);
-  g2.gain.setValueAtTime(.18,t);
-  g2.gain.exponentialRampToValueAtTime(.0001,t+.05);
-  o2.connect(g2);g2.connect(dest);o2.start(t);o2.stop(t+.06);
+  o2.type='sine';o2.frequency.setValueAtTime(55,t);g2.gain.value=.6;
+  o2.connect(g2);g2.connect(lp);o2.start(t);o2.stop(t+dur+.05);
+  // 은은한 어택 틱 (튕김 느낌만 살짝)
+  const o3=AC.createOscillator(),g3=AC.createGain();
+  o3.type='sine';o3.frequency.setValueAtTime(520,t);
+  o3.frequency.exponentialRampToValueAtTime(170,t+.035);
+  g3.gain.setValueAtTime(.12,t);
+  g3.gain.exponentialRampToValueAtTime(.0001,t+.06);
+  o3.connect(g3);g3.connect(dest);o3.start(t);o3.stop(t+.07);
 }
 function rStop(){
   if(!R.run)return;
