@@ -952,10 +952,10 @@ const RPATTERNS=[
   {cat:'8비트',name:'8비트 ② 기본 패턴',desc:'4분음표와 8분음표의 조합. 팝·록 어디서나 나오는 뼈대 리듬.',hits:[0,4,6,8,12,14],bpm:85},
   {cat:'8비트',name:'8비트 ③ 로큰롤',desc:'4분음표 워킹 느낌. 한 박씩 묵직하게.',hits:[0,4,8,12],bpm:95},
   {cat:'8비트',name:'8비트 ④ 보사노바',desc:'점4분+8분의 라틴 그루브. 박 사이를 파고드는 당김음이 포인트.',hits:[0,6,8,14],bpm:75},
-  {cat:'16비트',name:'16비트 ① 기본 패턴',desc:'16분음표 등장! "원-앤-아, 쓰리-앤-아"로 세면서.',hits:[0,2,3,8,10,11],bpm:70},
+  {cat:'16비트',name:'16비트 ① 기본 패턴',desc:'16분음표 등장! 한 박을 넷으로 쪼개 "1·3·4"에 치는 리듬.',hits:[0,2,3,8,10,11],bpm:70},
   {cat:'16비트',name:'16비트 ② 점8분+16분',desc:'"따-안따" 갤럽 리듬. 말이 달리는 느낌.',hits:[0,3,4,7,8,11,12,15],bpm:65},
   {cat:'16비트',name:'16비트 ③ 핑거 펑크',desc:'당김음 가득한 펑키 라인. 쉼표를 "느끼는" 게 핵심!',hits:[0,3,6,10,12,14],bpm:75},
-  {cat:'셋잇단',name:'셋잇단 기본',desc:'한 박을 3등분. "1-트-플 2-트-플" 고르게 굴리기.',u:12,upb:3,triplet:true,hits:[0,1,2,3,4,5,6,7,8,9,10,11],bpm:60},
+  {cat:'셋잇단',name:'셋잇단 기본',desc:'한 박을 3등분해서 빠짐없이 고르게 굴리기.',u:12,upb:3,triplet:true,hits:[0,1,2,3,4,5,6,7,8,9,10,11],bpm:60},
   {cat:'셋잇단',name:'셔플',desc:'셋잇단의 1·3번째만! 블루스의 통통 튀는 그루브.',u:12,upb:3,triplet:true,hits:[0,2,3,5,6,8,9,11],bpm:70},
   {cat:'셋잇단',name:'6/8 박자',desc:'8분음표 6개가 한 마디. 1과 4에 실리는 큰 2박을 느끼며.',u:6,upb:3,sixEight:true,hits:[0,2,3,5],bpm:55},
 ];
@@ -979,7 +979,7 @@ function genRandom(){
 // 쪼개기 훈련: 각 박을 4등분(1·e·&·a), 박마다 칠 위치를 숫자로만 제시
 function genSubdiv(){
   const nums=[1,2,3,4].map(()=>rand(4)+1);
-  return {cat:'쪼개기',name:'쪼개기 훈련',desc:'숫자 = 그 박을 4등분했을 때 칠 위치 (1=박머리, 2=e, 3=&, 4=a). 클릭을 들으며 머릿속으로 쪼개서 탭!',
+  return {cat:'쪼개기',name:'쪼개기 훈련',desc:'숫자 = 그 박을 4등분했을 때 칠 순서 (1=박머리, 4=박 끝). 클릭만 듣고 머릿속으로 쪼개서 탭!',
     u:16,upb:4,subdiv:true,nums,hits:nums.map((n,b)=>b*4+n-1),bpm:60};
 }
 let bestR=store('bestR')||{};
@@ -991,8 +991,8 @@ function rCountLabels(p){
   const u=rU(p),upb=rUpb(p),out=[];
   if(p.sixEight){for(let i=0;i<6;i++)out.push([String(i+1),i===0||i===3]);return out;}
   for(let b=0;b<u/upb;b++){
-    if(upb===4)out.push([String(b+1),true],['e',false],['&',false],['a',false]);
-    else out.push([String(b+1),true],['트',false],['플',false]);
+    if(upb===4)out.push([String(b+1),true],['2',false],['3',false],['4',false]);
+    else out.push([String(b+1),true],['2',false],['3',false]);
   }
   return out;
 }
@@ -1007,7 +1007,7 @@ function drawStaff(p){
       parts.push(`<text class="r-num" x="${xc}" y="66" font-size="40" fill="#f3e9dc" text-anchor="middle" font-family="Bungee">${p.nums[b]}</text>`);
     }
     parts.push(`<line x1="${W-padX}" y1="26" x2="${W-padX}" y2="78" stroke="#3a2f20" stroke-width="1.5"/>`);
-    parts.push(`<line id="r-ph" x1="-10" y1="14" x2="-10" y2="86" stroke="#ffb347" stroke-width="2" opacity=".85"/>`);
+    // 쪼개기 모드는 플레이헤드 없음 — 진행 위치가 보이면 힌트가 되므로 소리로만
     $('r-staff').innerHTML=parts.join('');
     return;
   }
@@ -1118,8 +1118,7 @@ function rStart(mode){
     numEls.forEach((n,i)=>n.setAttribute('fill',i===Math.floor(inBar/upb)?'#ffb347':'#f3e9dc'));
     if(unitF<u){ $('r-judge').textContent='카운트인… '+(Math.floor(unitF/upb)+1);$('r-judge').className='r-judge'; }
     else if(R.run.mode==='play'&&$('r-judge').textContent.startsWith('카운트인')){$('r-judge').textContent='GO!';}
-    const x=padX+slotW*inBar+slotW*.35;
-    ph.setAttribute('x1',x);ph.setAttribute('x2',x);
+    if(ph){const x=padX+slotW*inBar+slotW*.35;ph.setAttribute('x1',x);ph.setAttribute('x2',x);}
     R.run.raf=requestAnimationFrame(loop);
   };
   R.run.raf=requestAnimationFrame(loop);
@@ -1238,6 +1237,7 @@ function rRender(){
   $('bpm-val').textContent='♩ '+R.bpm;
   drawStaff(R.pat);
   const cbox=$('r-counts');cbox.innerHTML='';
+  cbox.style.display=R.pat.subdiv?'none':'flex'; // 쪼개기 모드는 쪼갠 박을 숨김
   rCountLabels(R.pat).forEach(([t,beat])=>{
     const i=document.createElement('i');i.textContent=t;if(beat)i.classList.add('beat');
     cbox.appendChild(i);
